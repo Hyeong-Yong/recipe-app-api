@@ -1,0 +1,12 @@
+{
+    "terminal.integrated.profiles.windows": {
+        "GitBash": {
+            "path": [
+                "C:\\Program Files\\Git\\bin\\bash.exe"
+            ],
+        },
+    },
+    "terminal.integrated.defaultProfile.windows": "Git Bash",
+    "python.formatting.provider": "black",
+    "editor.formatOnSave": true,
+}

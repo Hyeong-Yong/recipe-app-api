@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: . # current location
+    restart: always # if the app crashes, then restart it automatically
+    volumes:
+      - static-data:/vol/web # creating static data, which is going to be used to serve the static data through our nginx proxy.
+    environment:
+      - DB_HOST=db
+      - DB_NAME=${DB_NAME} #.env 파일에서 정의됨
+      - DB_USER=${DB_USER} # 설정된 환경변수는 setting.py에서 on.environ.get("DB_NAME")를 정의됨 통해 
+      - DB_PASS=${DB_PASS}
+      - SECRET_KEY=${DJANGO_SECRET_KEY}
+      - ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS}
+    depends_on:
+      - db # db start first, then start app 
+
+  db:
+    image: postgres:13-alpine
+    restart: always
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+
+  proxy:
+    build:
+      context: ./proxy # nginx
+    restart: always # 컨테이너가 실행 중 중단됐을 때(여기서는 어떤 특정 서비스가 ready 상태가 아직 안 돼 중단된 경우) 컨테이너를 다시 알아서 재시작을 해준다.
+    depends_on:
+      - app
+    ports:
+      - 80:8000 # 80(web browser, host):8000(nginx, docker)
+    volumes:
+      - static-data:/vol/static
+
+volumes:
+  postgres-data:
+  static-data:
+    # any data in this is going to be accessible to both.
+    # so anything the app writes to this volume is going to be readable by the proxy.
+    # this is how the proxy can serve the static files and the media files that are saved as part of our running application
